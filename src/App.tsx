@@ -58,18 +58,6 @@ function App() {
     );
   }
 
-  if (error) {
-    logger.error('❌ App: ошибка загрузки', error);
-    return (
-      <div className="min-h-screen bg-[#1c1c1e] text-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-2">Ошибка загрузки</p>
-          <p className="text-[#8e8e93] text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   const renderCurrentPage = () => {
     switch (activeTab) {
       case 'applications':
