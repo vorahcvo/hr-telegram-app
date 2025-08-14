@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabase';
+import { logger } from '../utils/logger';
 import Header from '../components/Layout/Header';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
@@ -19,8 +20,8 @@ const TrainingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('📚 TrainingPage: Rendering with state:', { 
-    user, 
+  logger.info('TrainingPage рендеринг', { 
+    user: user ? { id: user.id, user_id: user.user_id } : null, 
     lessonsCount: lessons.length, 
     loading, 
     error 
@@ -31,7 +32,7 @@ const TrainingPage: React.FC = () => {
   }, []);
 
   const loadLessons = async () => {
-    console.log('📚 TrainingPage: Loading lessons');
+    logger.info('Загрузка уроков');
 
     try {
       setLoading(true);
@@ -43,27 +44,33 @@ const TrainingPage: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: true });
 
-      console.log('📚 TrainingPage: Lessons query result:', { lessonsData, lessonsError });
+      logger.info('Результат запроса уроков', { 
+        lessonsCount: lessonsData?.length || 0, 
+        lessonsError: lessonsError ? { code: lessonsError.code, message: lessonsError.message } : null 
+      });
 
       if (lessonsError) {
-        console.error('📚 TrainingPage: Error fetching lessons:', lessonsError);
+        logger.error('Ошибка получения уроков', lessonsError);
         setError('Ошибка загрузки уроков');
         throw lessonsError;
       }
 
       // Если есть пользователь, загружаем прогресс
       if (user) {
-        console.log('📚 TrainingPage: Loading user progress for user:', user.user_id);
+        logger.info('Загрузка прогресса пользователя', { user_id: user.user_id });
         
         const { data: progressData, error: progressError } = await supabase
           .from('user_lessons')
           .select('*')
           .eq('user_id', user.user_id);
 
-        console.log('📚 TrainingPage: Progress query result:', { progressData, progressError });
+        logger.info('Результат запроса прогресса', { 
+          progressCount: progressData?.length || 0, 
+          progressError: progressError ? { code: progressError.code, message: progressError.message } : null 
+        });
 
         if (progressError) {
-          console.error('📚 TrainingPage: Error fetching progress:', progressError);
+          logger.error('Ошибка получения прогресса', progressError);
         } else {
           // Объединяем уроки с прогрессом
           const lessonsWithProgress = lessonsData?.map(lesson => {
@@ -74,14 +81,14 @@ const TrainingPage: React.FC = () => {
             };
           });
           setLessons(lessonsWithProgress || []);
+          logger.success('Уроки с прогрессом загружены', { count: lessonsWithProgress?.length || 0 });
         }
       } else {
         setLessons(lessonsData || []);
+        logger.success('Уроки загружены (без прогресса)', { count: lessonsData?.length || 0 });
       }
-
-      console.log('📚 TrainingPage: Lessons loaded:', lessonsData?.length || 0);
     } catch (error) {
-      console.error('📚 TrainingPage: Error in loadLessons:', error);
+      logger.error('Ошибка в loadLessons', error);
       setError('Ошибка загрузки уроков');
     } finally {
       setLoading(false);
@@ -90,11 +97,11 @@ const TrainingPage: React.FC = () => {
 
   const markLessonCompleted = async (lessonId: string) => {
     if (!user) {
-      console.log('📚 TrainingPage: No user, cannot mark lesson completed');
+      logger.warning('Нет пользователя, нельзя отметить урок как завершенный');
       return;
     }
 
-    console.log('📚 TrainingPage: Marking lesson as completed:', lessonId);
+    logger.info('Отметка урока как завершенного', { lessonId, user_id: user.user_id });
 
     try {
       const { error } = await supabase
@@ -107,16 +114,16 @@ const TrainingPage: React.FC = () => {
         });
 
       if (error) {
-        console.error('📚 TrainingPage: Error marking lesson completed:', error);
+        logger.error('Ошибка отметки урока как завершенного', error);
       } else {
-        console.log('📚 TrainingPage: Lesson marked as completed');
+        logger.success('Урок отмечен как завершенный');
         // Обновляем локальное состояние
         setLessons(prev => prev.map(lesson => 
           lesson.id === lessonId ? { ...lesson, completed: true } : lesson
         ));
       }
     } catch (error) {
-      console.error('📚 TrainingPage: Error in markLessonCompleted:', error);
+      logger.error('Ошибка в markLessonCompleted', error);
     }
   };
 
