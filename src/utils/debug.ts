@@ -10,6 +10,7 @@ declare global {
     debugTestConnection: () => void;
     debugTestFetch: () => void;
     debugTestSimpleFetch: () => void;
+    debugPingServer: () => void;
   }
 }
 
@@ -171,6 +172,70 @@ export const debugTestSimpleFetch = async () => {
   }
 };
 
+export const debugPingServer = async () => {
+  logger.info('🔧 DEBUG: Пинг сервера - проверка сетевого подключения');
+  
+  try {
+    // Тест 1: Простой ping без порта
+    logger.info('🌐 DEBUG: Тест 1 - Ping без порта');
+    try {
+      const response1 = await fetch('http://5.129.230.57/', { 
+        method: 'HEAD',
+        mode: 'no-cors' // Пробуем обойти CORS
+      });
+      logger.info('📡 DEBUG: Тест 1 - HEAD запрос выполнен');
+    } catch (error1) {
+      logger.error('❌ DEBUG: Тест 1 - HEAD запрос не удался', error1);
+    }
+    
+    // Тест 2: Ping с портом 8000
+    logger.info('🌐 DEBUG: Тест 2 - Ping с портом 8000');
+    try {
+      const response2 = await fetch('http://5.129.230.57:8000/', { 
+        method: 'HEAD',
+        mode: 'no-cors'
+      });
+      logger.info('📡 DEBUG: Тест 2 - HEAD запрос выполнен');
+    } catch (error2) {
+      logger.error('❌ DEBUG: Тест 2 - HEAD запрос не удался', error2);
+    }
+    
+    // Тест 3: Проверка через image (часто обходит CORS)
+    logger.info('🌐 DEBUG: Тест 3 - Проверка через image');
+    try {
+      const img = new Image();
+      img.onload = () => {
+        logger.success('✅ DEBUG: Тест 3 - Image загружена успешно');
+      };
+      img.onerror = () => {
+        logger.error('❌ DEBUG: Тест 3 - Image не загрузилась');
+      };
+      img.src = 'http://5.129.230.57:8000/favicon.ico?' + Date.now();
+    } catch (error3) {
+      logger.error('❌ DEBUG: Тест 3 - Image exception', error3);
+    }
+    
+    // Тест 4: Проверка через script tag
+    logger.info('🌐 DEBUG: Тест 4 - Проверка через script');
+    try {
+      const script = document.createElement('script');
+      script.onload = () => {
+        logger.success('✅ DEBUG: Тест 4 - Script загружен успешно');
+      };
+      script.onerror = () => {
+        logger.error('❌ DEBUG: Тест 4 - Script не загрузился');
+      };
+      script.src = 'http://5.129.230.57:8000/health?' + Date.now();
+      document.head.appendChild(script);
+    } catch (error4) {
+      logger.error('❌ DEBUG: Тест 4 - Script exception', error4);
+    }
+    
+  } catch (error) {
+    logger.error('❌ DEBUG: Ping exception', error);
+  }
+};
+
 // Привязываем функции к window
 if (typeof window !== 'undefined') {
   window.debugCreateUser = debugCreateUser;
@@ -179,4 +244,5 @@ if (typeof window !== 'undefined') {
   window.debugTestConnection = debugTestConnection;
   window.debugTestFetch = debugTestFetch;
   window.debugTestSimpleFetch = debugTestSimpleFetch;
+  window.debugPingServer = debugPingServer;
 }
