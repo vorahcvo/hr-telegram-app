@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Trash2 } from 'lucide-react';
+import { X, Copy, Trash2, RefreshCw, Wifi } from 'lucide-react';
 
 interface LogEntry {
   id: string;
@@ -56,6 +56,25 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
     });
   };
 
+  const resetApp = () => {
+    // Сбрасываем состояние приложения
+    window.location.reload();
+  };
+
+  const testConnection = () => {
+    // Вызываем функцию тестирования подключения
+    if (window.debugTestConnection) {
+      window.debugTestConnection();
+    }
+  };
+
+  const testFetch = () => {
+    // Вызываем функцию тестирования fetch
+    if (window.debugTestFetch) {
+      window.debugTestFetch();
+    }
+  };
+
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'error': return 'text-red-400';
@@ -73,6 +92,27 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between p-4 border-b border-[#2c2c2e]">
           <h2 className="text-lg font-semibold text-white">Логи приложения</h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={testConnection}
+              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
+              title="Тест подключения к Supabase"
+            >
+              <Wifi size={16} />
+            </button>
+            <button
+              onClick={testFetch}
+              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
+              title="Тест прямого fetch"
+            >
+              <RefreshCw size={16} />
+            </button>
+            <button
+              onClick={resetApp}
+              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
+              title="Перезагрузить приложение"
+            >
+              <RefreshCw size={16} />
+            </button>
             <button
               onClick={copyLogs}
               className="p-2 text-[#8e8e93] hover:text-white transition-colors"
@@ -110,6 +150,26 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
             <span className="text-sm text-[#8e8e93]">
               Логов: {logs.length}
             </span>
+            <button
+              onClick={() => {
+                if (window.debugCreateUser) {
+                  window.debugCreateUser();
+                }
+              }}
+              className="text-sm text-[#007aff] hover:underline"
+            >
+              Создать пользователя
+            </button>
+            <button
+              onClick={() => {
+                if (window.debugCheckUser) {
+                  window.debugCheckUser();
+                }
+              }}
+              className="text-sm text-[#007aff] hover:underline"
+            >
+              Проверить пользователя
+            </button>
           </div>
           
           <div className="bg-[#2c2c2e] rounded-lg p-3 h-96 overflow-y-auto font-mono text-sm">
