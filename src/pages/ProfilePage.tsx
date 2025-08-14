@@ -16,7 +16,10 @@ const ProfilePage: React.FC = () => {
   const [showRequisitesModal, setShowRequisitesModal] = useState(false);
   const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
 
+  console.log('📱 ProfilePage: Rendering with state:', { user, loading, hasRequisites });
+
   if (loading) {
+    console.log('📱 ProfilePage: Showing loading state');
     return (
       <div className="flex flex-col h-full">
         <Header title="Профиль" />
@@ -28,32 +31,42 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!user) {
+    console.log('📱 ProfilePage: No user data, showing error state');
     return (
       <div className="flex flex-col h-full">
         <Header title="Профиль" />
         <div className="flex-1 flex items-center justify-center p-4">
-          <p className="text-[#8e8e93]">Ошибка загрузки профиля</p>
+          <div className="text-center">
+            <p className="text-[#8e8e93] mb-2">Ошибка загрузки профиля</p>
+            <p className="text-sm text-[#8e8e93]">Попробуйте перезагрузить приложение</p>
+          </div>
         </div>
       </div>
     );
   }
 
+  console.log('📱 ProfilePage: User data loaded:', user);
+
   const handleSaveRequisites = async (requisites: any) => {
+    console.log('📱 ProfilePage: Saving requisites:', requisites);
     try {
       await updateUser(requisites);
       setShowRequisitesModal(false);
       hapticFeedback('success');
+      console.log('📱 ProfilePage: Requisites saved successfully');
     } catch (error) {
-      console.error('Error updating requisites:', error);
+      console.error('📱 ProfilePage: Error saving requisites:', error);
     }
   };
 
   const handleSupportRequest = () => {
+    console.log('📱 ProfilePage: Support request triggered');
     sendCallback('support_request');
     hapticFeedback('light');
   };
 
   const handleTerminateContract = () => {
+    console.log('📱 ProfilePage: Terminate contract triggered');
     sendCallback('fired_request');
     setShowTerminateConfirm(false);
     hapticFeedback('light');
