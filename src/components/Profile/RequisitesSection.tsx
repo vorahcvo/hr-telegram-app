@@ -1,7 +1,6 @@
 import React from 'react';
 import { Edit } from 'lucide-react';
 import { User } from '../../types';
-import Button from '../UI/Button';
 
 interface RequisitesSectionProps {
   profile: User;
