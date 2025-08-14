@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabase';
+import { logger } from '../utils/logger';
 import Header from '../components/Layout/Header';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
@@ -18,8 +19,8 @@ const SourcesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('🔗 SourcesPage: Rendering with state:', { 
-    user, 
+  logger.info('SourcesPage рендеринг', { 
+    user: user ? { id: user.id, user_id: user.user_id } : null, 
     sourcesCount: sources.length, 
     loading, 
     error 
@@ -33,11 +34,11 @@ const SourcesPage: React.FC = () => {
 
   const loadSources = async () => {
     if (!user) {
-      console.log('🔗 SourcesPage: No user, skipping load');
+      logger.warning('Нет пользователя, пропускаем загрузку источников');
       return;
     }
 
-    console.log('🔗 SourcesPage: Loading sources for user:', user.user_id);
+    logger.info('Загрузка источников для пользователя', { user_id: user.user_id });
 
     try {
       setLoading(true);
@@ -50,18 +51,21 @@ const SourcesPage: React.FC = () => {
         .eq('deleted', false)
         .order('created_at', { ascending: false });
 
-      console.log('🔗 SourcesPage: Database query result:', { data, fetchError });
+      logger.info('Результат запроса источников', { 
+        dataCount: data?.length || 0, 
+        fetchError 
+      });
 
       if (fetchError) {
-        console.error('🔗 SourcesPage: Error fetching sources:', fetchError);
+        logger.error('Ошибка получения источников', fetchError);
         setError('Ошибка загрузки источников');
         throw fetchError;
       }
 
       setSources(data || []);
-      console.log('🔗 SourcesPage: Sources loaded:', data?.length || 0);
+      logger.success('Источники загружены', { count: data?.length || 0 });
     } catch (error) {
-      console.error('🔗 SourcesPage: Error in loadSources:', error);
+      logger.error('Ошибка в loadSources', error);
       setError('Ошибка загрузки источников');
     } finally {
       setLoading(false);
