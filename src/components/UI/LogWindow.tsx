@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Trash2, RefreshCw, Wifi } from 'lucide-react';
+import { X, Copy, Trash2, RefreshCw, Wifi, Globe } from 'lucide-react';
 
 interface LogEntry {
   id: string;
@@ -75,6 +75,13 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const testSimpleFetch = () => {
+    // Вызываем функцию простого тестирования fetch
+    if (window.debugTestSimpleFetch) {
+      window.debugTestSimpleFetch();
+    }
+  };
+
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'error': return 'text-red-400';
@@ -105,6 +112,13 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
               title="Тест прямого fetch"
             >
               <RefreshCw size={16} />
+            </button>
+            <button
+              onClick={testSimpleFetch}
+              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
+              title="Простой тест fetch"
+            >
+              <Globe size={16} />
             </button>
             <button
               onClick={resetApp}
