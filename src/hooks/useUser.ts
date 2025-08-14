@@ -7,7 +7,7 @@ import { User } from '../types';
 export const useUser = () => {
   const { user: tgUser } = useTelegram();
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Всегда начинаем с true
 
   logger.info('useUser хук инициализирован', { 
     tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
@@ -18,7 +18,8 @@ export const useUser = () => {
   useEffect(() => {
     logger.info('useUser useEffect сработал', { 
       tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
-      hasTgUser: !!tgUser 
+      hasTgUser: !!tgUser,
+      loading 
     });
     
     if (tgUser) {
