@@ -1,53 +1,32 @@
-type LogLevel = 'info' | 'error' | 'warning' | 'success';
-
-interface LogData {
-  level: LogLevel;
+interface LogEntry {
+  timestamp: string;
+  level: 'info' | 'error' | 'success' | 'warning';
   message: string;
   data?: any;
 }
 
 class Logger {
-  private static instance: Logger;
-  private logs: LogData[] = [];
-  private maxLogs = 1000;
+  private logs: LogEntry[] = [];
+  private maxLogs = 100;
 
-  private constructor() {}
+  private addLog(level: LogEntry['level'], message: string, data?: any) {
+    const entry: LogEntry = {
+      timestamp: new Date().toLocaleTimeString(),
+      level,
+      message,
+      data
+    };
 
-  static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
-  }
+    this.logs.push(entry);
 
-  private addLog(level: LogLevel, message: string, data?: any) {
-    const logData: LogData = { level, message, data };
-    
-    // Добавляем в массив
-    this.logs.push(logData);
-    
-    // Ограничиваем количество логов
+    // Keep only the last maxLogs entries
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);
     }
 
-    // Отправляем событие для UI
-    const event = new CustomEvent('app-log', { detail: logData });
-    window.dispatchEvent(event);
-
-    // Также выводим в консоль для разработки
-    const timestamp = new Date().toLocaleTimeString();
-    const emoji = this.getEmoji(level);
-    console.log(`${emoji} [${timestamp}] ${level.toUpperCase()}: ${message}`, data || '');
-  }
-
-  private getEmoji(level: LogLevel): string {
-    switch (level) {
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'success': return '✅';
-      default: return 'ℹ️';
-    }
+    // Also log to console for debugging
+    const consoleMethod = level === 'error' ? 'error' : level === 'success' ? 'log' : 'info';
+    console[consoleMethod](`[${entry.timestamp}] ${level.toUpperCase()}: ${message}`, data || '');
   }
 
   info(message: string, data?: any) {
@@ -58,21 +37,27 @@ class Logger {
     this.addLog('error', message, data);
   }
 
-  warning(message: string, data?: any) {
-    this.addLog('warning', message, data);
-  }
-
   success(message: string, data?: any) {
     this.addLog('success', message, data);
   }
 
-  getLogs(): LogData[] {
+  warning(message: string, data?: any) {
+    this.addLog('warning', message, data);
+  }
+
+  getLogs(): LogEntry[] {
     return [...this.logs];
   }
 
   clearLogs() {
     this.logs = [];
   }
+
+  getLogsAsText(): string {
+    return this.logs
+      .map(log => `[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}${log.data ? ' | ' + JSON.stringify(log.data) : ''}`)
+      .join('\n');
+  }
 }
 
-export const logger = Logger.getInstance();
+export const logger = new Logger();
