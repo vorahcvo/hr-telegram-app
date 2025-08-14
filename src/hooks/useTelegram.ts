@@ -1,78 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { logger } from '../utils/logger';
 
-declare global {
-  interface Window {
-    Telegram: {
-      WebApp: any;
-    };
-  }
+interface UseTelegramReturn {
+  hapticFeedback: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'success' | 'warning' | 'error') => void;
+  sendCallback: (data: string) => void;
+  onEvent: (eventType: string, eventHandler: Function) => void;
+  offEvent: (eventType: string, eventHandler: Function) => void;
+  sendData: (data: any) => void;
 }
 
-export const useTelegram = () => {
-  const [tg, setTg] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    logger.info('Инициализация Telegram WebApp');
-    logger.info('Telegram WebApp доступен', { 
-      hasTelegram: !!window.Telegram, 
-      hasWebApp: !!window.Telegram?.WebApp 
-    });
-    
-    if (window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      logger.info('WebApp объект получен', webApp);
-      
-      try {
-        webApp.ready();
-        logger.success('WebApp готов к работе');
-        
-        setTg(webApp);
-        logger.info('WebApp установлен в состояние');
-        
-        const userData = webApp.initDataUnsafe?.user;
-        logger.info('Данные пользователя от WebApp', userData);
-        
-        setUser(userData);
-        logger.success('Пользователь установлен в состояние');
-      } catch (error) {
-        logger.error('Ошибка инициализации WebApp', error);
+export const useTelegram = (): UseTelegramReturn => {
+  const hapticFeedback = useCallback((style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'success' | 'warning' | 'error') => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred(style);
+        logger.info(`🔧 DEBUG: Haptic feedback: ${style}`);
       }
-    } else {
-      logger.warning('Telegram WebApp недоступен, используем mock данные');
-      // Mock data for development
-      const mockUser = {
-        id: 123456789,
-        first_name: 'Test',
-        last_name: 'User',
-        username: 'testuser',
-        photo_url: null
-      };
-      setUser(mockUser);
-      setTg({ 
-        sendData: () => logger.info('Mock sendData вызван'), 
-        HapticFeedback: { 
-          impactOccurred: () => logger.info('Mock haptic вызван') 
-        } 
-      });
-      logger.info('Mock данные установлены', mockUser);
+    } catch (error) {
+      logger.error('❌ DEBUG: Ошибка haptic feedback', error);
     }
   }, []);
 
-  const sendCallback = (data: string) => {
-    logger.info('Отправка callback', { data });
-    if (tg) {
-      tg.sendData(data);
+  const sendCallback = useCallback((data: string) => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.sendData) {
+        tg.sendData(data);
+        logger.info(`🔧 DEBUG: Отправлен callback: ${data}`);
+      }
+    } catch (error) {
+      logger.error('❌ DEBUG: Ошибка отправки callback', error);
     }
-  };
+  }, []);
 
-  const hapticFeedback = (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'success' | 'warning' | 'error') => {
-    logger.info('Haptic feedback', { style });
-    if (tg) {
-      tg.HapticFeedback.impactOccurred(style);
+  const onEvent = useCallback((eventType: string, eventHandler: Function) => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.onEvent) {
+        tg.onEvent(eventType, eventHandler);
+        logger.info(`🔧 DEBUG: Подписка на событие: ${eventType}`);
+      }
+    } catch (error) {
+      logger.error('❌ DEBUG: Ошибка подписки на событие', error);
     }
-  };
+  }, []);
 
-  return { tg, user, sendCallback, hapticFeedback };
+  const offEvent = useCallback((eventType: string, eventHandler: Function) => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.offEvent) {
+        tg.offEvent(eventType, eventHandler);
+        logger.info(`🔧 DEBUG: Отписка от события: ${eventType}`);
+      }
+    } catch (error) {
+      logger.error('❌ DEBUG: Ошибка отписки от события', error);
+    }
+  }, []);
+
+  const sendData = useCallback((data: any) => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify(data));
+        logger.info(`🔧 DEBUG: Отправлены данные:`, data);
+      }
+    } catch (error) {
+      logger.error('❌ DEBUG: Ошибка отправки данных', error);
+    }
+  }, []);
+
+  return {
+    hapticFeedback,
+    sendCallback,
+    onEvent,
+    offEvent,
+    sendData
+  };
 };
