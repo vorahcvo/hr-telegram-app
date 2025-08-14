@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TabType } from './types';
 import { useTelegram } from './hooks/useTelegram';
 import { useUser } from './hooks/useUser';
@@ -11,13 +11,78 @@ import ProfilePage from './pages/ProfilePage';
 import LogWindow from './components/UI/LogWindow';
 
 function App() {
-  const { tg } = useTelegram();
-  const { loading } = useUser();
+  const { tg, user: tgUser } = useTelegram();
+  const { user, loading, updateUser } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>('applications');
   const [showLogs, setShowLogs] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  logger.info('App компонент рендеринг', { 
+    tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
+    user: user ? { id: user.id, name: user.name } : null,
+    loading,
+    initialized
+  });
+
+  // Принудительная инициализация пользователя
+  useEffect(() => {
+    if (tgUser && !user && !loading && !initialized) {
+      logger.warning('Принудительная инициализация пользователя в App');
+      setInitialized(true);
+      
+      // Создаем пользователя напрямую
+      const createUser = async () => {
+        try {
+          const newUser = {
+            user_id: tgUser.id,
+            name: `${tgUser.first_name} ${tgUser.last_name || ''}`.trim(),
+            username: tgUser.username || null,
+            avatar: tgUser.photo_url || null,
+          };
+
+          logger.info('Создание пользователя из App', newUser);
+
+          const { createClient } = await import('./lib/supabase');
+          const supabase = createClient();
+
+          const { data: createdUser, error: createError } = await supabase
+            .from('users')
+            .insert(newUser)
+            .select()
+            .single();
+
+          if (createError) {
+            logger.error('Ошибка создания пользователя из App', createError);
+          } else {
+            logger.success('Пользователь создан из App', createdUser);
+            
+            // Создаем источник по умолчанию
+            const { error: sourceError } = await supabase
+              .from('sources')
+              .insert({
+                user_id: tgUser.id,
+                name: 'Отклики компании',
+                status: 'active',
+                is_default: true,
+              });
+
+            if (sourceError) {
+              logger.error('Ошибка создания источника из App', sourceError);
+            } else {
+              logger.success('Источник создан из App');
+            }
+          }
+        } catch (error) {
+          logger.error('Ошибка в createUser из App', error);
+        }
+      };
+
+      createUser();
+    }
+  }, [tgUser, user, loading, initialized]);
 
   // Слушаем событие переключения вкладок
-  React.useEffect(() => {
+  useEffect(() => {
     const handleSwitchTab = (event: CustomEvent) => {
       setActiveTab(event.detail);
     };
@@ -29,7 +94,7 @@ function App() {
   }, []);
 
   // Set Telegram theme colors
-  React.useEffect(() => {
+  useEffect(() => {
     if (tg) {
       // Set theme colors for better integration
       document.documentElement.style.setProperty('--tg-theme-bg-color', '#1c1c1e');
@@ -42,6 +107,7 @@ function App() {
   }, [tg]);
 
   if (loading) {
+    logger.info('App: показываем состояние загрузки');
     return (
       <div className="min-h-screen bg-[#1c1c1e] text-white flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-[#007aff] border-t-transparent rounded-full animate-spin"></div>
