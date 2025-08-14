@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAnon } from '../lib/supabase';
 import { useTelegram } from './useTelegram';
 import { logger } from '../utils/logger';
 import { User } from '../types';
@@ -67,24 +67,67 @@ export const useUser = () => {
     try {
       setError(null);
       
-      // Проверяем подключение к Supabase
-      logger.info('🔌 Проверка подключения к Supabase');
-      const { data: testData, error: testError } = await supabase
-        .from('users')
-        .select('count')
-        .limit(1);
+      // Тестируем подключение с SERVICE_ROLE_KEY
+      logger.info('🔌 Тестируем подключение с SERVICE_ROLE_KEY');
+      try {
+        const { data: testData, error: testError } = await supabase
+          .from('users')
+          .select('count')
+          .limit(1);
 
-      if (testError) {
-        logger.error('❌ Ошибка подключения к Supabase', testError);
-        setError(`Ошибка подключения к базе данных: ${testError.message}`);
-        setLoading(false);
-        return;
-      } else {
-        logger.success('✅ Подключение к Supabase успешно');
+        if (testError) {
+          logger.error('❌ Ошибка подключения с SERVICE_ROLE_KEY', testError);
+        } else {
+          logger.success('✅ Подключение с SERVICE_ROLE_KEY успешно');
+        }
+      } catch (serviceError) {
+        logger.error('❌ Исключение при подключении с SERVICE_ROLE_KEY', serviceError);
       }
 
-      // Проверяем, существует ли пользователь
-      logger.info('🔍 Проверка существования пользователя в базе данных');
+      // Тестируем подключение с ANON_KEY
+      logger.info('🔌 Тестируем подключение с ANON_KEY');
+      try {
+        const { data: testDataAnon, error: testErrorAnon } = await supabaseAnon
+          .from('users')
+          .select('count')
+          .limit(1);
+
+        if (testErrorAnon) {
+          logger.error('❌ Ошибка подключения с ANON_KEY', testErrorAnon);
+        } else {
+          logger.success('✅ Подключение с ANON_KEY успешно');
+        }
+      } catch (anonError) {
+        logger.error('❌ Исключение при подключении с ANON_KEY', anonError);
+      }
+
+      // Пробуем простой fetch для диагностики
+      logger.info('🌐 Тестируем прямой fetch к Supabase');
+      try {
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/users?select=count&limit=1`, {
+          headers: {
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        logger.info('📡 Fetch response status:', response.status);
+        logger.info('📡 Fetch response headers:', Object.fromEntries(response.headers.entries()));
+        
+        if (response.ok) {
+          const data = await response.json();
+          logger.success('✅ Fetch успешен', data);
+        } else {
+          const errorText = await response.text();
+          logger.error('❌ Fetch failed', { status: response.status, text: errorText });
+        }
+      } catch (fetchError) {
+        logger.error('❌ Fetch exception', fetchError);
+      }
+
+      // Проверяем, существует ли пользователь с SERVICE_ROLE_KEY
+      logger.info('🔍 Проверка существования пользователя с SERVICE_ROLE_KEY');
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
