@@ -7,8 +7,28 @@ declare global {
     debugCreateUser: () => Promise<void>;
     debugCheckUser: () => Promise<void>;
     debugResetUser: () => Promise<void>;
+    debugTestConnection: () => Promise<void>;
   }
 }
+
+export const debugTestConnection = async () => {
+  try {
+    logger.info('🔌 Тестирование подключения к Supabase');
+    
+    const { data, error } = await supabase
+      .from('users')
+      .select('count')
+      .limit(1);
+
+    if (error) {
+      logger.error('❌ Ошибка подключения к Supabase', error);
+    } else {
+      logger.success('✅ Подключение к Supabase успешно');
+    }
+  } catch (error) {
+    logger.error('❌ Ошибка тестирования подключения', error);
+  }
+};
 
 export const debugCreateUser = async () => {
   try {
@@ -16,11 +36,14 @@ export const debugCreateUser = async () => {
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
     
     if (!tgUser) {
-      logger.error('Нет данных пользователя Telegram');
+      logger.error('❌ Нет данных пользователя Telegram');
       return;
     }
 
-    logger.info('Принудительное создание пользователя', tgUser);
+    logger.info('🆕 Принудительное создание пользователя', tgUser);
+
+    // Сначала тестируем подключение
+    await debugTestConnection();
 
     const newUser = {
       user_id: tgUser.id,
@@ -29,6 +52,8 @@ export const debugCreateUser = async () => {
       avatar: tgUser.photo_url || null,
     };
 
+    logger.info('📝 Данные для создания', newUser);
+
     const { data: createdUser, error: createError } = await supabase
       .from('users')
       .insert(newUser)
@@ -36,9 +61,9 @@ export const debugCreateUser = async () => {
       .single();
 
     if (createError) {
-      logger.error('Ошибка создания пользователя', createError);
+      logger.error('❌ Ошибка создания пользователя', createError);
     } else {
-      logger.success('Пользователь создан', createdUser);
+      logger.success('✅ Пользователь создан', createdUser);
       
       // Создаем источник по умолчанию
       const { error: sourceError } = await supabase
@@ -51,13 +76,13 @@ export const debugCreateUser = async () => {
         });
 
       if (sourceError) {
-        logger.error('Ошибка создания источника', sourceError);
+        logger.error('❌ Ошибка создания источника', sourceError);
       } else {
-        logger.success('Источник создан');
+        logger.success('✅ Источник создан');
       }
     }
   } catch (error) {
-    logger.error('Ошибка в debugCreateUser', error);
+    logger.error('❌ Ошибка в debugCreateUser', error);
   }
 };
 
@@ -66,11 +91,11 @@ export const debugCheckUser = async () => {
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
     
     if (!tgUser) {
-      logger.error('Нет данных пользователя Telegram');
+      logger.error('❌ Нет данных пользователя Telegram');
       return;
     }
 
-    logger.info('Проверка пользователя в базе данных', { user_id: tgUser.id });
+    logger.info('🔍 Проверка пользователя в базе данных', { user_id: tgUser.id });
 
     const { data: user, error } = await supabase
       .from('users')
@@ -79,12 +104,12 @@ export const debugCheckUser = async () => {
       .single();
 
     if (error) {
-      logger.error('Ошибка проверки пользователя', error);
+      logger.error('❌ Ошибка проверки пользователя', error);
     } else {
-      logger.success('Пользователь найден в базе', user);
+      logger.success('✅ Пользователь найден в базе', user);
     }
   } catch (error) {
-    logger.error('Ошибка в debugCheckUser', error);
+    logger.error('❌ Ошибка в debugCheckUser', error);
   }
 };
 
@@ -93,11 +118,11 @@ export const debugResetUser = async () => {
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
     
     if (!tgUser) {
-      logger.error('Нет данных пользователя Telegram');
+      logger.error('❌ Нет данных пользователя Telegram');
       return;
     }
 
-    logger.info('Удаление пользователя из базы данных', { user_id: tgUser.id });
+    logger.info('🗑️ Удаление пользователя из базы данных', { user_id: tgUser.id });
 
     const { error } = await supabase
       .from('users')
@@ -105,12 +130,12 @@ export const debugResetUser = async () => {
       .eq('user_id', tgUser.id);
 
     if (error) {
-      logger.error('Ошибка удаления пользователя', error);
+      logger.error('❌ Ошибка удаления пользователя', error);
     } else {
-      logger.success('Пользователь удален из базы данных');
+      logger.success('✅ Пользователь удален из базы данных');
     }
   } catch (error) {
-    logger.error('Ошибка в debugResetUser', error);
+    logger.error('❌ Ошибка в debugResetUser', error);
   }
 };
 
@@ -119,9 +144,11 @@ if (typeof window !== 'undefined') {
   window.debugCreateUser = debugCreateUser;
   window.debugCheckUser = debugCheckUser;
   window.debugResetUser = debugResetUser;
+  window.debugTestConnection = debugTestConnection;
   
-  logger.info('Отладочные функции добавлены в window');
-  logger.info('Доступные функции:');
+  logger.info('🔧 Отладочные функции добавлены в window');
+  logger.info('📋 Доступные функции:');
+  logger.info('- window.debugTestConnection() - проверить подключение к Supabase');
   logger.info('- window.debugCreateUser() - создать пользователя');
   logger.info('- window.debugCheckUser() - проверить пользователя');
   logger.info('- window.debugResetUser() - удалить пользователя');
