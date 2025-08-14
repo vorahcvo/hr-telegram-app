@@ -21,5 +21,17 @@ export const useTelegram = () => {
     }
   }, []);
 
-  return { tg, user };
+  const sendCallback = (data: string) => {
+    if (tg) {
+      tg.sendData(data);
+    }
+  };
+
+  const hapticFeedback = (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'success' | 'warning' | 'error') => {
+    if (tg) {
+      tg.HapticFeedback.impactOccurred(style);
+    }
+  };
+
+  return { tg, user, sendCallback, hapticFeedback };
 };
