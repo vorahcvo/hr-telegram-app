@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { logger } from '../utils/logger';
 
 declare global {
   interface Window {
@@ -13,31 +14,33 @@ export const useTelegram = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    console.log('🔧 useTelegram: Initializing...');
-    console.log('🔧 useTelegram: window.Telegram exists:', !!window.Telegram);
-    console.log('🔧 useTelegram: window.Telegram.WebApp exists:', !!window.Telegram?.WebApp);
+    logger.info('Инициализация Telegram WebApp');
+    logger.info('Telegram WebApp доступен', { 
+      hasTelegram: !!window.Telegram, 
+      hasWebApp: !!window.Telegram?.WebApp 
+    });
     
     if (window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp;
-      console.log('🔧 useTelegram: WebApp object:', webApp);
+      logger.info('WebApp объект получен', webApp);
       
       try {
         webApp.ready();
-        console.log('🔧 useTelegram: WebApp ready called');
+        logger.success('WebApp готов к работе');
         
         setTg(webApp);
-        console.log('🔧 useTelegram: WebApp set to state');
+        logger.info('WebApp установлен в состояние');
         
         const userData = webApp.initDataUnsafe?.user;
-        console.log('🔧 useTelegram: User data from WebApp:', userData);
+        logger.info('Данные пользователя от WebApp', userData);
         
         setUser(userData);
-        console.log('🔧 useTelegram: User set to state');
+        logger.success('Пользователь установлен в состояние');
       } catch (error) {
-        console.error('🔧 useTelegram: Error initializing WebApp:', error);
+        logger.error('Ошибка инициализации WebApp', error);
       }
     } else {
-      console.log('🔧 useTelegram: Telegram WebApp not available, using mock data');
+      logger.warning('Telegram WebApp недоступен, используем mock данные');
       // Mock data for development
       const mockUser = {
         id: 123456789,
@@ -47,19 +50,25 @@ export const useTelegram = () => {
         photo_url: null
       };
       setUser(mockUser);
-      setTg({ sendData: () => console.log('Mock sendData'), HapticFeedback: { impactOccurred: () => console.log('Mock haptic') } });
+      setTg({ 
+        sendData: () => logger.info('Mock sendData вызван'), 
+        HapticFeedback: { 
+          impactOccurred: () => logger.info('Mock haptic вызван') 
+        } 
+      });
+      logger.info('Mock данные установлены', mockUser);
     }
   }, []);
 
   const sendCallback = (data: string) => {
-    console.log('🔧 useTelegram: sendCallback called with:', data);
+    logger.info('Отправка callback', { data });
     if (tg) {
       tg.sendData(data);
     }
   };
 
   const hapticFeedback = (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'success' | 'warning' | 'error') => {
-    console.log('🔧 useTelegram: hapticFeedback called with:', style);
+    logger.info('Haptic feedback', { style });
     if (tg) {
       tg.HapticFeedback.impactOccurred(style);
     }
