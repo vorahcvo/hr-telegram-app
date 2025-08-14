@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTelegram } from '../hooks/useTelegram';
 import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabase';
+import { logger } from '../utils/logger';
 import Header from '../components/Layout/Header';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
@@ -21,9 +22,9 @@ const ApplicationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('📋 ApplicationsPage: Rendering with state:', { 
-    tgUser, 
-    user, 
+  logger.info('ApplicationsPage рендеринг', { 
+    tgUser: tgUser ? { id: tgUser.id } : null, 
+    user: user ? { id: user.id, user_id: user.user_id } : null, 
     applicationsCount: applications.length, 
     loading, 
     error 
@@ -37,11 +38,11 @@ const ApplicationsPage: React.FC = () => {
 
   const loadApplications = async () => {
     if (!user) {
-      console.log('📋 ApplicationsPage: No user, skipping load');
+      logger.warning('Нет пользователя, пропускаем загрузку заявок');
       return;
     }
 
-    console.log('📋 ApplicationsPage: Loading applications for user:', user.user_id);
+    logger.info('Загрузка заявок для пользователя', { user_id: user.user_id });
 
     try {
       setLoading(true);
@@ -54,18 +55,21 @@ const ApplicationsPage: React.FC = () => {
         .eq('deleted', false)
         .order('created_at', { ascending: false });
 
-      console.log('📋 ApplicationsPage: Database query result:', { data, fetchError });
+      logger.info('Результат запроса заявок', { 
+        dataCount: data?.length || 0, 
+        fetchError 
+      });
 
       if (fetchError) {
-        console.error('📋 ApplicationsPage: Error fetching applications:', fetchError);
+        logger.error('Ошибка получения заявок', fetchError);
         setError('Ошибка загрузки заявок');
         throw fetchError;
       }
 
       setApplications(data || []);
-      console.log('📋 ApplicationsPage: Applications loaded:', data?.length || 0);
+      logger.success('Заявки загружены', { count: data?.length || 0 });
     } catch (error) {
-      console.error('📋 ApplicationsPage: Error in loadApplications:', error);
+      logger.error('Ошибка в loadApplications', error);
       setError('Ошибка загрузки заявок');
     } finally {
       setLoading(false);
