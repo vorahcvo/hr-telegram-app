@@ -12,7 +12,7 @@ import LoadMoreButton from '../components/UI/LoadMoreButton';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import ApplicationsList from '../components/Applications/ApplicationsList';
 import ApplicationForm from '../components/Applications/ApplicationForm';
-import FilterModal from '../components/Applications/FilterModal';
+import ApplicationsFilter from '../components/Applications/ApplicationsFilter';
 
 const ApplicationsPage: React.FC = () => {
   const { hapticFeedback, sendCallback } = useTelegram();
@@ -185,83 +185,54 @@ const ApplicationsPage: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск по имени, телефону или email"
-              className="w-full pl-10 pr-4 py-2 bg-[#2c2c2e] border border-[#3c3c3e] rounded-lg text-white placeholder-[#8e8e93] focus:outline-none focus:border-[#007aff]"
+              placeholder="Поиск по имени или телефону"
+              className="w-full pl-10 pr-3 py-2 bg-[#1c1c1e] border border-[#3c3c3e] rounded-lg text-white placeholder-[#8e8e93] focus:outline-none focus:ring-2 focus:ring-[#007aff] focus:border-transparent"
             />
           </div>
-          <Button
-            variant={hasActiveFilters ? "primary" : "secondary"}
-            size="sm"
+          <button
             onClick={() => setShowFilters(true)}
+            className={`p-2 rounded-lg transition-colors ${
+              hasActiveFilters 
+                ? 'bg-[#007aff] text-white' 
+                : 'bg-[#2c2c2e] text-[#8e8e93] hover:text-white'
+            }`}
           >
             <Filter size={16} />
-          </Button>
+          </button>
         </div>
 
-        {/* Applications List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <LoadingSpinner />
-          </div>
-        ) : filteredApplications.length === 0 ? (
-          <EmptyState
-            icon={Search}
-            title={searchQuery || hasActiveFilters ? "Заявки не найдены" : "Нет заявок"}
-            description={
-              searchQuery || hasActiveFilters 
-                ? "Попробуйте изменить параметры поиска или фильтры"
-                : "Добавьте первую заявку, нажав на кнопку +"
-            }
-            actionText={searchQuery || hasActiveFilters ? "Очистить фильтры" : "Добавить заявку"}
-            onAction={() => {
-              if (searchQuery || hasActiveFilters) {
-                setSearchQuery('');
-                setFilters({ status: '', source: '', dateFrom: '', dateTo: '' });
-              } else {
-                setCurrentView('add');
-              }
-            }}
-          />
-        ) : (
-          <>
-            <ApplicationsList
-              applications={filteredApplications}
-              sources={sources}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteApplication}
-            />
-            
-            {hasMore && (
-              <LoadMoreButton
-                loading={loading}
-                onClick={loadMore}
-              />
-            )}
-          </>
+        {/* Request Responses Button */}
+        {hasRequisites && (
+          <Button variant="secondary" fullWidth onClick={handleRequestResponses}>
+            Запросить отклики
+          </Button>
         )}
 
-        {/* Request Responses Button */}
-        {filteredApplications.length > 0 && (
-          <div className="pt-4">
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={handleRequestResponses}
-            >
-              <Calendar size={16} className="mr-2" />
-              Запросить отклики
-            </Button>
-          </div>
+        {loading && applications.length === 0 ? (
+          <LoadingSpinner />
+        ) : (
+          <>
+            <ApplicationsList 
+              applications={filteredApplications}
+              onEdit={handleEditClick}
+            />
+            <LoadMoreButton
+              onLoadMore={loadMore}
+              loading={loading}
+              hasMore={hasMore}
+            />
+          </>
         )}
       </div>
 
       {/* Filter Modal */}
       {showFilters && (
-        <FilterModal
-          filters={filters}
-          onFiltersChange={setFilters}
+        <ApplicationsFilter
+          isOpen={showFilters}
           onClose={() => setShowFilters(false)}
           sources={sources}
+          onApplyFilter={setFilters}
+          currentFilters={filters}
         />
       )}
     </div>
