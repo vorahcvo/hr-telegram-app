@@ -3,6 +3,7 @@ import { TabType } from './types';
 import { useTelegram } from './hooks/useTelegram';
 import { useUser } from './hooks/useUser';
 import { logger } from './utils/logger';
+import { supabase } from './lib/supabase';
 import TabBar from './components/Layout/TabBar';
 import ApplicationsPage from './pages/ApplicationsPage';
 import SourcesPage from './pages/SourcesPage';
@@ -15,20 +16,20 @@ function App() {
   const { user, loading, updateUser } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>('applications');
   const [showLogs, setShowLogs] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [appInitialized, setAppInitialized] = useState(false);
 
   logger.info('App компонент рендеринг', { 
     tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
     user: user ? { id: user.id, name: user.name } : null,
     loading,
-    initialized
+    appInitialized
   });
 
   // Принудительная инициализация пользователя
   useEffect(() => {
-    if (tgUser && !user && !loading && !initialized) {
+    if (tgUser && !user && !loading && !appInitialized) {
       logger.warning('Принудительная инициализация пользователя в App');
-      setInitialized(true);
+      setAppInitialized(true);
       
       // Создаем пользователя напрямую
       const createUser = async () => {
@@ -41,9 +42,6 @@ function App() {
           };
 
           logger.info('Создание пользователя из App', newUser);
-
-          const { createClient } = await import('./lib/supabase');
-          const supabase = createClient();
 
           const { data: createdUser, error: createError } = await supabase
             .from('users')
@@ -79,7 +77,49 @@ function App() {
 
       createUser();
     }
-  }, [tgUser, user, loading, initialized]);
+  }, [tgUser, user, loading, appInitialized]);
+
+  // Дополнительная проверка - если пользователь есть в базе, но не загружен в состоянии
+  useEffect(() => {
+    if (tgUser && !user && !loading) {
+      logger.info('Проверка существования пользователя в базе данных из App');
+      
+      const checkUser = async () => {
+        try {
+          const { data: existingUser, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('user_id', tgUser.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') {
+            logger.error('Ошибка проверки пользователя из App', error);
+          } else if (existingUser) {
+            logger.success('Пользователь найден в базе из App', existingUser);
+            // Здесь мы не можем обновить состояние useUser, но можем создать источник
+            const { error: sourceError } = await supabase
+              .from('sources')
+              .insert({
+                user_id: tgUser.id,
+                name: 'Отклики компании',
+                status: 'active',
+                is_default: true,
+              });
+
+            if (sourceError) {
+              logger.error('Ошибка создания источника из App', sourceError);
+            } else {
+              logger.success('Источник создан из App');
+            }
+          }
+        } catch (error) {
+          logger.error('Ошибка в checkUser из App', error);
+        }
+      };
+
+      checkUser();
+    }
+  }, [tgUser, user, loading]);
 
   // Слушаем событие переключения вкладок
   useEffect(() => {
