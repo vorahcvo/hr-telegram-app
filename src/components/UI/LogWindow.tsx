@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Trash2, RefreshCw, Wifi, Globe } from 'lucide-react';
+import { X, Copy, Trash2, RefreshCw, Wifi, Globe, Activity } from 'lucide-react';
 
 interface LogEntry {
   id: string;
@@ -82,6 +82,13 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const pingServer = () => {
+    // Вызываем функцию пинга сервера
+    if (window.debugPingServer) {
+      window.debugPingServer();
+    }
+  };
+
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'error': return 'text-red-400';
@@ -99,6 +106,13 @@ const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between p-4 border-b border-[#2c2c2e]">
           <h2 className="text-lg font-semibold text-white">Логи приложения</h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={pingServer}
+              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
+              title="Пинг сервера"
+            >
+              <Activity size={16} />
+            </button>
             <button
               onClick={testConnection}
               className="p-2 text-[#8e8e93] hover:text-white transition-colors"
