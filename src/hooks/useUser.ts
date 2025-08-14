@@ -17,7 +17,7 @@ export const useUser = () => {
     initialized
   });
 
-  // Эффект для обработки изменений tgUser
+  // Основной эффект для инициализации
   useEffect(() => {
     logger.info('useUser useEffect сработал', { 
       tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
@@ -32,17 +32,11 @@ export const useUser = () => {
       initializeUser();
     } else if (!tgUser) {
       logger.warning('Telegram пользователь еще не загружен, ожидание...');
-    }
-  }, [tgUser, initialized]);
-
-  // Дополнительный эффект для обработки случая, когда tgUser уже есть при первом рендере
-  useEffect(() => {
-    if (tgUser && !initialized) {
-      logger.info('tgUser уже доступен при первом рендере, инициализируем');
-      setInitialized(true);
+    } else if (tgUser && initialized && !user) {
+      logger.warning('Пользователь инициализирован, но данные не загружены, повторная попытка');
       initializeUser();
     }
-  }, []);
+  }, [tgUser, initialized, user]);
 
   const initializeUser = async () => {
     if (!tgUser) {
