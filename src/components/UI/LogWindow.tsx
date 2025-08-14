@@ -1,232 +1,102 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Trash2, RefreshCw, Wifi, Globe, Activity } from 'lucide-react';
+import { X, Copy, Trash2, Wifi, RefreshCw, Globe, Activity } from 'lucide-react';
+import { logger } from '../../utils/logger';
+import { debugTestConnection, debugTestFetch, debugTestSimpleFetch, debugPingServer, debugCreateUser, debugCheckUser, debugResetUser } from '../../utils/debug';
 
-interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: 'info' | 'error' | 'warning' | 'success';
-  message: string;
-  data?: any;
-}
-
-interface LogWindowProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const LogWindow: React.FC<LogWindowProps> = ({ isOpen, onClose }) => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [autoScroll, setAutoScroll] = useState(true);
+const LogWindow: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      // Подписываемся на логи
-      const handleLog = (event: CustomEvent) => {
-        const { level, message, data } = event.detail;
-        const newLog: LogEntry = {
-          id: Date.now().toString(),
-          timestamp: new Date().toLocaleTimeString(),
-          level,
-          message,
-          data
-        };
-        setLogs(prev => [...prev, newLog]);
-      };
+    const updateLogs = () => {
+      setLogs(logger.getLogs());
+    };
 
-      window.addEventListener('app-log', handleLog as EventListener);
-      return () => window.removeEventListener('app-log', handleLog as EventListener);
-    }
-  }, [isOpen]);
+    // Update logs every second
+    const interval = setInterval(updateLogs, 1000);
+    updateLogs(); // Initial update
 
-  const clearLogs = () => {
-    setLogs([]);
-  };
+    return () => clearInterval(interval);
+  }, []);
 
-  const copyLogs = () => {
-    const logText = logs.map(log => 
-      `[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}${log.data ? ` | ${JSON.stringify(log.data)}` : ''}`
-    ).join('\n');
-    
-    navigator.clipboard.writeText(logText).then(() => {
-      // Показываем уведомление
-      const event = new CustomEvent('app-log', {
-        detail: { level: 'success', message: 'Логи скопированы в буфер обмена' }
-      });
-      window.dispatchEvent(event);
+  const handleCopyLogs = () => {
+    const logsText = logger.getLogsAsText();
+    navigator.clipboard.writeText(logsText).then(() => {
+      logger.success('Логи скопированы в буфер обмена');
     });
   };
 
-  const resetApp = () => {
-    // Сбрасываем состояние приложения
-    window.location.reload();
+  const handleClearLogs = () => {
+    logger.clearLogs();
+    setLogs([]);
   };
 
-  const testConnection = () => {
-    // Вызываем функцию тестирования подключения
-    if (window.debugTestConnection) {
-      window.debugTestConnection();
-    }
-  };
-
-  const testFetch = () => {
-    // Вызываем функцию тестирования fetch
-    if (window.debugTestFetch) {
-      window.debugTestFetch();
-    }
-  };
-
-  const testSimpleFetch = () => {
-    // Вызываем функцию простого тестирования fetch
-    if (window.debugTestSimpleFetch) {
-      window.debugTestSimpleFetch();
-    }
-  };
-
-  const pingServer = () => {
-    // Вызываем функцию пинга сервера
-    if (window.debugPingServer) {
-      window.debugPingServer();
-    }
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'error': return 'text-red-400';
-      case 'warning': return 'text-yellow-400';
-      case 'success': return 'text-green-400';
-      default: return 'text-blue-400';
-    }
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-4 right-4 bg-[#007aff] text-white p-3 rounded-full shadow-lg hover:bg-[#0056cc] transition-colors z-50"
+      >
+        <Activity size={20} />
+      </button>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-[#1c1c1e] rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-[#2c2c2e]">
-          <h2 className="text-lg font-semibold text-white">Логи приложения</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={pingServer}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Пинг сервера"
-            >
-              <Activity size={16} />
-            </button>
-            <button
-              onClick={testConnection}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Тест подключения к Supabase"
-            >
-              <Wifi size={16} />
-            </button>
-            <button
-              onClick={testFetch}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Тест прямого fetch"
-            >
-              <RefreshCw size={16} />
-            </button>
-            <button
-              onClick={testSimpleFetch}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Простой тест fetch"
-            >
-              <Globe size={16} />
-            </button>
-            <button
-              onClick={resetApp}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Перезагрузить приложение"
-            >
-              <RefreshCw size={16} />
-            </button>
-            <button
-              onClick={copyLogs}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Копировать логи"
-            >
-              <Copy size={16} />
-            </button>
-            <button
-              onClick={clearLogs}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-              title="Очистить логи"
-            >
-              <Trash2 size={16} />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-[#8e8e93] hover:text-white transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-4">
-          <div className="flex items-center gap-4 mb-4">
-            <label className="flex items-center gap-2 text-white">
-              <input
-                type="checkbox"
-                checked={autoScroll}
-                onChange={(e) => setAutoScroll(e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm">Автопрокрутка</span>
-            </label>
-            <span className="text-sm text-[#8e8e93]">
-              Логов: {logs.length}
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 bg-opacity-90 text-white p-2 z-50 max-h-1/2 overflow-y-auto flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium">Логи отладки</h3>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="p-1 hover:bg-gray-700 rounded"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Log entries */}
+      <div className="flex-1 overflow-y-auto space-y-1 text-xs">
+        {logs.map((log, index) => (
+          <div key={index} className="flex items-start gap-2">
+            <span className="text-gray-400 min-w-[60px]">{log.timestamp}</span>
+            <span className={`font-medium ${
+              log.level === 'error' ? 'text-red-400' :
+              log.level === 'success' ? 'text-green-400' :
+              log.level === 'warning' ? 'text-yellow-400' :
+              'text-blue-400'
+            }`}>
+              {log.level.toUpperCase()}
             </span>
-            <button
-              onClick={() => {
-                if (window.debugCreateUser) {
-                  window.debugCreateUser();
-                }
-              }}
-              className="text-sm text-[#007aff] hover:underline"
-            >
-              Создать пользователя
-            </button>
-            <button
-              onClick={() => {
-                if (window.debugCheckUser) {
-                  window.debugCheckUser();
-                }
-              }}
-              className="text-sm text-[#007aff] hover:underline"
-            >
-              Проверить пользователя
-            </button>
-          </div>
-          
-          <div className="bg-[#2c2c2e] rounded-lg p-3 h-96 overflow-y-auto font-mono text-sm">
-            {logs.length === 0 ? (
-              <p className="text-[#8e8e93] text-center">Логи появятся здесь...</p>
-            ) : (
-              <div className="space-y-1">
-                {logs.map((log) => (
-                  <div key={log.id} className="flex items-start gap-2">
-                    <span className={`text-xs ${getLevelColor(log.level)} min-w-[60px]`}>
-                      {log.level.toUpperCase()}
-                    </span>
-                    <span className="text-[#8e8e93] text-xs min-w-[80px]">
-                      {log.timestamp}
-                    </span>
-                    <span className="text-white flex-1">
-                      {log.message}
-                      {log.data && (
-                        <span className="text-[#8e8e93] ml-2">
-                          {typeof log.data === 'object' ? JSON.stringify(log.data) : log.data}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <span className="flex-1">{log.message}</span>
+            {log.data && (
+              <span className="text-gray-500">
+                {typeof log.data === 'object' ? JSON.stringify(log.data) : log.data}
+              </span>
             )}
           </div>
-        </div>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex justify-around p-2 border-t border-gray-700">
+        <button onClick={handleClearLogs} className="p-2 bg-red-500 rounded-md text-sm">Очистить</button>
+        <button onClick={handleCopyLogs} className="p-2 bg-blue-500 rounded-md text-sm">Копировать</button>
+        <button onClick={() => debugTestConnection()} className="p-2 bg-green-500 rounded-md text-sm flex items-center justify-center">
+          <Wifi className="w-4 h-4" />
+        </button>
+        <button onClick={() => debugTestFetch()} className="p-2 bg-purple-500 rounded-md text-sm flex items-center justify-center">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+        <button onClick={() => debugTestSimpleFetch()} className="p-2 bg-yellow-500 rounded-md text-sm flex items-center justify-center">
+          <Globe className="w-4 h-4" />
+        </button>
+        <button onClick={() => debugPingServer()} className="p-2 bg-orange-500 rounded-md text-sm flex items-center justify-center">
+          <Activity className="w-4 h-4" />
+        </button>
+        <button onClick={() => debugCreateUser()} className="p-2 bg-indigo-500 rounded-md text-sm">Создать пользователя</button>
+        <button onClick={() => debugCheckUser()} className="p-2 bg-teal-500 rounded-md text-sm">Проверить пользователя</button>
+        <button onClick={() => debugResetUser()} className="p-2 bg-pink-500 rounded-md text-sm">Сбросить пользователя</button>
       </div>
     </div>
   );
