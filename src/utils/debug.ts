@@ -9,6 +9,7 @@ declare global {
     debugResetUser: () => void;
     debugTestConnection: () => void;
     debugTestFetch: () => void;
+    debugTestSimpleFetch: () => void;
   }
 }
 
@@ -133,6 +134,43 @@ export const debugTestFetch = async () => {
   }
 };
 
+export const debugTestSimpleFetch = async () => {
+  logger.info('🔧 DEBUG: Тестирование простого fetch без заголовков');
+  
+  try {
+    // Тест 1: Простой GET запрос
+    logger.info('🌐 DEBUG: Тест 1 - Простой GET запрос');
+    const response1 = await fetch('http://5.129.230.57:8000/rest/v1/');
+    logger.info('📡 DEBUG: Тест 1 status', response1.status);
+    
+    // Тест 2: GET запрос с базовыми заголовками
+    logger.info('🌐 DEBUG: Тест 2 - GET с базовыми заголовками');
+    const response2 = await fetch('http://5.129.230.57:8000/rest/v1/users', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU'
+      }
+    });
+    logger.info('📡 DEBUG: Тест 2 status', response2.status);
+    
+    // Тест 3: Проверка доступности сервера
+    logger.info('🌐 DEBUG: Тест 3 - Проверка доступности сервера');
+    const response3 = await fetch('http://5.129.230.57:8000/');
+    logger.info('📡 DEBUG: Тест 3 status', response3.status);
+    
+    // Тест 4: Проверка с HTTPS (если доступен)
+    logger.info('🌐 DEBUG: Тест 4 - Проверка HTTPS');
+    try {
+      const response4 = await fetch('https://5.129.230.57:8000/rest/v1/');
+      logger.info('📡 DEBUG: Тест 4 HTTPS status', response4.status);
+    } catch (httpsError) {
+      logger.error('❌ DEBUG: HTTPS недоступен', httpsError);
+    }
+    
+  } catch (error) {
+    logger.error('❌ DEBUG: Простой fetch exception', error);
+  }
+};
+
 // Привязываем функции к window
 if (typeof window !== 'undefined') {
   window.debugCreateUser = debugCreateUser;
@@ -140,4 +178,5 @@ if (typeof window !== 'undefined') {
   window.debugResetUser = debugResetUser;
   window.debugTestConnection = debugTestConnection;
   window.debugTestFetch = debugTestFetch;
+  window.debugTestSimpleFetch = debugTestSimpleFetch;
 }
