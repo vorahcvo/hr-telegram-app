@@ -114,8 +114,8 @@ export const debugTestFetch = async () => {
   try {
     const response = await fetch('http://5.129.230.57:8000/rest/v1/users?select=count&limit=1', {
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAwLCJleHAiOjE5MDI3NzY0MDB9.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAwLCJleHAiOjE5MDI3NzY0MDB9.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU',
         'Content-Type': 'application/json'
       }
     });
@@ -148,7 +148,7 @@ export const debugTestSimpleFetch = async () => {
     logger.info('🌐 DEBUG: Тест 2 - GET с базовыми заголовками');
     const response2 = await fetch('http://5.129.230.57:8000/rest/v1/users', {
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU'
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAwLCJleHAiOjE5MDI3NzY0MDB9.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU'
       }
     });
     logger.info('📡 DEBUG: Тест 2 status', response2.status);
