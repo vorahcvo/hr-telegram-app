@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { TabType } from './types';
 import { useTelegram } from './hooks/useTelegram';
 import { useUser } from './hooks/useUser';
+import { logger } from './utils/logger';
 import TabBar from './components/Layout/TabBar';
 import ApplicationsPage from './pages/ApplicationsPage';
 import SourcesPage from './pages/SourcesPage';
 import TrainingPage from './pages/TrainingPage';
 import ProfilePage from './pages/ProfilePage';
+import LogWindow from './components/UI/LogWindow';
 
 function App() {
   const { tg } = useTelegram();
   const { loading } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>('applications');
+  const [showLogs, setShowLogs] = useState(false);
 
   // Слушаем событие переключения вкладок
   React.useEffect(() => {
@@ -68,7 +71,19 @@ function App() {
           {renderCurrentPage()}
         </main>
         <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        
+        {/* Кнопка логов */}
+        <button
+          onClick={() => setShowLogs(true)}
+          className="fixed bottom-20 right-4 w-12 h-12 bg-[#007aff] rounded-full flex items-center justify-center shadow-lg z-40"
+          title="Показать логи"
+        >
+          <span className="text-white text-lg">📋</span>
+        </button>
       </div>
+
+      {/* Окно логов */}
+      <LogWindow isOpen={showLogs} onClose={() => setShowLogs(false)} />
     </div>
   );
 }
