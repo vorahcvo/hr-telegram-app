@@ -109,10 +109,10 @@ export const debugTestConnection = async () => {
 };
 
 export const debugTestFetch = async () => {
-  logger.info('🔧 DEBUG: Тестирование прямого fetch');
+  logger.info('🔧 DEBUG: Тестирование прямого fetch через прокси');
   
   try {
-    const response = await fetch('http://5.129.230.57:8000/rest/v1/users?select=count&limit=1', {
+    const response = await fetch('/api/supabase/rest/v1/users?select=count&limit=1', {
       headers: {
         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU',
         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU',
@@ -136,36 +136,27 @@ export const debugTestFetch = async () => {
 };
 
 export const debugTestSimpleFetch = async () => {
-  logger.info('🔧 DEBUG: Тестирование простого fetch без заголовков');
+  logger.info('🔧 DEBUG: Тестирование простого fetch через прокси');
   
   try {
-    // Тест 1: Простой GET запрос
-    logger.info('🌐 DEBUG: Тест 1 - Простой GET запрос');
-    const response1 = await fetch('http://5.129.230.57:8000/rest/v1/');
+    // Тест 1: Простой GET запрос через прокси
+    logger.info('🌐 DEBUG: Тест 1 - Простой GET запрос через прокси');
+    const response1 = await fetch('/api/supabase/rest/v1/');
     logger.info('📡 DEBUG: Тест 1 status', response1.status);
     
-    // Тест 2: GET запрос с базовыми заголовками
-    logger.info('🌐 DEBUG: Тест 2 - GET с базовыми заголовками');
-    const response2 = await fetch('http://5.129.230.57:8000/rest/v1/users', {
+    // Тест 2: GET запрос с базовыми заголовками через прокси
+    logger.info('🌐 DEBUG: Тест 2 - GET с базовыми заголовками через прокси');
+    const response2 = await fetch('/api/supabase/rest/v1/users', {
       headers: {
         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ1MDEwMDAsImV4cCI6MTkwMjc3NjQwMH0.LlGieQIb8ukhfR_qGM0yUBLWy1BYE9jno76YkLJBmRU'
       }
     });
     logger.info('📡 DEBUG: Тест 2 status', response2.status);
     
-    // Тест 3: Проверка доступности сервера
-    logger.info('🌐 DEBUG: Тест 3 - Проверка доступности сервера');
-    const response3 = await fetch('http://5.129.230.57:8000/');
+    // Тест 3: Проверка доступности сервера через прокси
+    logger.info('🌐 DEBUG: Тест 3 - Проверка доступности сервера через прокси');
+    const response3 = await fetch('/api/supabase/');
     logger.info('📡 DEBUG: Тест 3 status', response3.status);
-    
-    // Тест 4: Проверка с HTTPS (если доступен)
-    logger.info('🌐 DEBUG: Тест 4 - Проверка HTTPS');
-    try {
-      const response4 = await fetch('https://5.129.230.57:8000/rest/v1/');
-      logger.info('📡 DEBUG: Тест 4 HTTPS status', response4.status);
-    } catch (httpsError) {
-      logger.error('❌ DEBUG: HTTPS недоступен', httpsError);
-    }
     
   } catch (error) {
     logger.error('❌ DEBUG: Простой fetch exception', error);
@@ -173,35 +164,33 @@ export const debugTestSimpleFetch = async () => {
 };
 
 export const debugPingServer = async () => {
-  logger.info('🔧 DEBUG: Пинг сервера - проверка сетевого подключения');
+  logger.info('🔧 DEBUG: Пинг сервера через прокси');
   
   try {
-    // Тест 1: Простой ping без порта
-    logger.info('🌐 DEBUG: Тест 1 - Ping без порта');
+    // Тест 1: Простой ping через прокси
+    logger.info('🌐 DEBUG: Тест 1 - Ping через прокси');
     try {
-      const response1 = await fetch('http://5.129.230.57/', { 
-        method: 'HEAD',
-        mode: 'no-cors' // Пробуем обойти CORS
+      const response1 = await fetch('/api/supabase/', { 
+        method: 'HEAD'
       });
-      logger.info('📡 DEBUG: Тест 1 - HEAD запрос выполнен');
+      logger.info('📡 DEBUG: Тест 1 - HEAD запрос выполнен, status:', response1.status);
     } catch (error1) {
       logger.error('❌ DEBUG: Тест 1 - HEAD запрос не удался', error1);
     }
     
-    // Тест 2: Ping с портом 8000
-    logger.info('🌐 DEBUG: Тест 2 - Ping с портом 8000');
+    // Тест 2: Проверка REST API через прокси
+    logger.info('🌐 DEBUG: Тест 2 - Проверка REST API через прокси');
     try {
-      const response2 = await fetch('http://5.129.230.57:8000/', { 
-        method: 'HEAD',
-        mode: 'no-cors'
+      const response2 = await fetch('/api/supabase/rest/v1/', { 
+        method: 'HEAD'
       });
-      logger.info('📡 DEBUG: Тест 2 - HEAD запрос выполнен');
+      logger.info('📡 DEBUG: Тест 2 - HEAD запрос выполнен, status:', response2.status);
     } catch (error2) {
       logger.error('❌ DEBUG: Тест 2 - HEAD запрос не удался', error2);
     }
     
-    // Тест 3: Проверка через image (часто обходит CORS)
-    logger.info('🌐 DEBUG: Тест 3 - Проверка через image');
+    // Тест 3: Проверка через image через прокси
+    logger.info('🌐 DEBUG: Тест 3 - Проверка через image через прокси');
     try {
       const img = new Image();
       img.onload = () => {
@@ -210,25 +199,9 @@ export const debugPingServer = async () => {
       img.onerror = () => {
         logger.error('❌ DEBUG: Тест 3 - Image не загрузилась');
       };
-      img.src = 'http://5.129.230.57:8000/favicon.ico?' + Date.now();
+      img.src = '/api/supabase/favicon.ico?' + Date.now();
     } catch (error3) {
       logger.error('❌ DEBUG: Тест 3 - Image exception', error3);
-    }
-    
-    // Тест 4: Проверка через script tag
-    logger.info('🌐 DEBUG: Тест 4 - Проверка через script');
-    try {
-      const script = document.createElement('script');
-      script.onload = () => {
-        logger.success('✅ DEBUG: Тест 4 - Script загружен успешно');
-      };
-      script.onerror = () => {
-        logger.error('❌ DEBUG: Тест 4 - Script не загрузился');
-      };
-      script.src = 'http://5.129.230.57:8000/health?' + Date.now();
-      document.head.appendChild(script);
-    } catch (error4) {
-      logger.error('❌ DEBUG: Тест 4 - Script exception', error4);
     }
     
   } catch (error) {
