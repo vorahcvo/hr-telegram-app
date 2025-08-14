@@ -1,6 +1,6 @@
 import React from 'react';
 import { TabType } from '../../types';
-import { FileText, Source, BookOpen, User } from 'lucide-react';
+import { FileText, Link, BookOpen, User } from 'lucide-react';
 
 interface TabBarProps {
   activeTab: TabType;
@@ -10,7 +10,7 @@ interface TabBarProps {
 const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: 'applications' as TabType, label: 'Заявки', icon: FileText },
-    { id: 'sources' as TabType, label: 'Источники', icon: Source },
+    { id: 'sources' as TabType, label: 'Источники', icon: Link },
     { id: 'training' as TabType, label: 'Обучение', icon: BookOpen },
     { id: 'profile' as TabType, label: 'Профиль', icon: User },
   ];
