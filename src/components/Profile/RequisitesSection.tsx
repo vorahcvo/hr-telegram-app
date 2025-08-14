@@ -15,13 +15,12 @@ const RequisitesSection: React.FC<RequisitesSectionProps> = ({ profile, onEdit }
     <div className="bg-[#2c2c2e] rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-white">Реквизиты</h3>
-        <Button
-          variant="secondary"
+        <button
           onClick={onEdit}
-          className="p-2"
+          className="p-2 bg-[#2c2c2e] text-white hover:bg-[#3c3c3e] rounded-lg transition-colors"
         >
           <Edit size={16} />
-        </Button>
+        </button>
       </div>
       
       {hasRequisites ? (
