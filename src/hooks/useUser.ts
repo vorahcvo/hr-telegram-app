@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTelegram } from './useTelegram';
+import { logger } from '../utils/logger';
 import { User } from '../types';
 
 export const useUser = () => {
@@ -9,46 +10,46 @@ export const useUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('👤 useUser: Effect triggered');
-    console.log('👤 useUser: tgUser:', tgUser);
+    logger.info('useUser эффект сработал');
+    logger.info('Telegram пользователь', tgUser);
     
     if (tgUser) {
-      console.log('👤 useUser: Telegram user found, initializing...');
+      logger.info('Telegram пользователь найден, инициализация...');
       initializeUser();
     } else {
-      console.log('👤 useUser: No Telegram user yet, waiting...');
+      logger.info('Telegram пользователь еще не загружен, ожидание...');
     }
   }, [tgUser]);
 
   const initializeUser = async () => {
     if (!tgUser) {
-      console.log('👤 useUser: No tgUser, skipping initialization');
+      logger.warning('Нет tgUser, пропускаем инициализацию');
       return;
     }
 
-    console.log('👤 useUser: Starting user initialization for user_id:', tgUser.id);
+    logger.info('Начало инициализации пользователя', { user_id: tgUser.id });
 
     try {
       // Проверяем, существует ли пользователь
-      console.log('👤 useUser: Checking if user exists in database...');
+      logger.info('Проверка существования пользователя в базе данных');
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
         .eq('user_id', tgUser.id)
         .single();
 
-      console.log('👤 useUser: Database query result:', { existingUser, fetchError });
+      logger.info('Результат запроса к базе данных', { existingUser, fetchError });
 
       if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('👤 useUser: Error fetching user:', fetchError);
+        logger.error('Ошибка получения пользователя', fetchError);
         throw fetchError;
       }
 
       if (existingUser) {
-        console.log('👤 useUser: Existing user found:', existingUser);
+        logger.success('Существующий пользователь найден', existingUser);
         setUser(existingUser);
       } else {
-        console.log('👤 useUser: No existing user found, creating new user...');
+        logger.info('Существующий пользователь не найден, создание нового');
         // Создаем нового пользователя
         const newUser = {
           user_id: tgUser.id,
@@ -57,7 +58,7 @@ export const useUser = () => {
           avatar: tgUser.photo_url || null,
         };
 
-        console.log('👤 useUser: New user data to insert:', newUser);
+        logger.info('Данные нового пользователя для вставки', newUser);
 
         const { data: createdUser, error: createError } = await supabase
           .from('users')
@@ -65,17 +66,17 @@ export const useUser = () => {
           .select()
           .single();
 
-        console.log('👤 useUser: User creation result:', { createdUser, createError });
+        logger.info('Результат создания пользователя', { createdUser, createError });
 
         if (createError) {
-          console.error('👤 useUser: Error creating user:', createError);
+          logger.error('Ошибка создания пользователя', createError);
           throw createError;
         }
 
-        console.log('👤 useUser: User created successfully:', createdUser);
+        logger.success('Пользователь успешно создан', createdUser);
 
         // Создаем источник по умолчанию
-        console.log('👤 useUser: Creating default source...');
+        logger.info('Создание источника по умолчанию');
         const { error: sourceError } = await supabase
           .from('sources')
           .insert({
@@ -86,28 +87,28 @@ export const useUser = () => {
           });
 
         if (sourceError) {
-          console.error('👤 useUser: Error creating default source:', sourceError);
+          logger.error('Ошибка создания источника по умолчанию', sourceError);
         } else {
-          console.log('👤 useUser: Default source created successfully');
+          logger.success('Источник по умолчанию успешно создан');
         }
 
         setUser(createdUser);
       }
     } catch (error) {
-      console.error('👤 useUser: Error in initializeUser:', error);
+      logger.error('Ошибка в initializeUser', error);
     } finally {
-      console.log('👤 useUser: Setting loading to false');
+      logger.info('Установка loading в false');
       setLoading(false);
     }
   };
 
   const updateUser = async (updates: Partial<User>) => {
     if (!user) {
-      console.log('👤 useUser: No user to update');
+      logger.warning('Нет пользователя для обновления');
       return;
     }
 
-    console.log('👤 useUser: Updating user with:', updates);
+    logger.info('Обновление пользователя', updates);
 
     try {
       const { data: updatedUser, error } = await supabase
@@ -118,22 +119,26 @@ export const useUser = () => {
         .single();
 
       if (error) {
-        console.error('👤 useUser: Error updating user:', error);
+        logger.error('Ошибка обновления пользователя', error);
         throw error;
       }
 
-      console.log('👤 useUser: User updated successfully:', updatedUser);
+      logger.success('Пользователь успешно обновлен', updatedUser);
       setUser(updatedUser);
       return updatedUser;
     } catch (error) {
-      console.error('👤 useUser: Error updating user:', error);
+      logger.error('Ошибка обновления пользователя', error);
       throw error;
     }
   };
 
   const hasRequisites = user && (user.inn || user.corporate_card || user.account_number || user.bik);
 
-  console.log('👤 useUser: Current state:', { user, loading, hasRequisites: !!hasRequisites });
+  logger.info('Текущее состояние useUser', { 
+    user: user ? { id: user.id, name: user.name } : null, 
+    loading, 
+    hasRequisites: !!hasRequisites 
+  });
 
   return {
     user,
