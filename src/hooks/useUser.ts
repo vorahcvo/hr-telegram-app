@@ -7,29 +7,42 @@ import { User } from '../types';
 export const useUser = () => {
   const { user: tgUser } = useTelegram();
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // Всегда начинаем с true
+  const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   logger.info('useUser хук инициализирован', { 
     tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
     currentUser: user,
-    loading 
+    loading,
+    initialized
   });
 
+  // Эффект для обработки изменений tgUser
   useEffect(() => {
     logger.info('useUser useEffect сработал', { 
       tgUser: tgUser ? { id: tgUser.id, first_name: tgUser.first_name } : null,
       hasTgUser: !!tgUser,
-      loading 
+      loading,
+      initialized
     });
     
-    if (tgUser) {
+    if (tgUser && !initialized) {
       logger.info('Telegram пользователь найден, начинаем инициализацию');
+      setInitialized(true);
       initializeUser();
-    } else {
+    } else if (!tgUser) {
       logger.warning('Telegram пользователь еще не загружен, ожидание...');
-      // Не устанавливаем loading в false, ждем tgUser
     }
-  }, [tgUser]);
+  }, [tgUser, initialized]);
+
+  // Дополнительный эффект для обработки случая, когда tgUser уже есть при первом рендере
+  useEffect(() => {
+    if (tgUser && !initialized) {
+      logger.info('tgUser уже доступен при первом рендере, инициализируем');
+      setInitialized(true);
+      initializeUser();
+    }
+  }, []);
 
   const initializeUser = async () => {
     if (!tgUser) {
