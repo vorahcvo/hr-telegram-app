@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MessageCircle, UserX } from 'lucide-react';
 import { useTelegram } from '../hooks/useTelegram';
 import { useUser } from '../hooks/useUser';
+import { logger } from '../utils/logger';
 import Header from '../components/Layout/Header';
 import Button from '../components/UI/Button';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
@@ -16,10 +17,14 @@ const ProfilePage: React.FC = () => {
   const [showRequisitesModal, setShowRequisitesModal] = useState(false);
   const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
 
-  console.log('📱 ProfilePage: Rendering with state:', { user, loading, hasRequisites });
+  logger.info('ProfilePage рендеринг', { 
+    user: user ? { id: user.id, name: user.name, user_id: user.user_id } : null, 
+    loading, 
+    hasRequisites 
+  });
 
   if (loading) {
-    console.log('📱 ProfilePage: Showing loading state');
+    logger.info('ProfilePage: показываем состояние загрузки');
     return (
       <div className="flex flex-col h-full">
         <Header title="Профиль" />
@@ -31,7 +36,7 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!user) {
-    console.log('📱 ProfilePage: No user data, showing error state');
+    logger.error('ProfilePage: нет данных пользователя, показываем ошибку');
     return (
       <div className="flex flex-col h-full">
         <Header title="Профиль" />
@@ -45,28 +50,32 @@ const ProfilePage: React.FC = () => {
     );
   }
 
-  console.log('📱 ProfilePage: User data loaded:', user);
+  logger.info('ProfilePage: данные пользователя загружены', { 
+    id: user.id, 
+    name: user.name, 
+    user_id: user.user_id 
+  });
 
   const handleSaveRequisites = async (requisites: any) => {
-    console.log('📱 ProfilePage: Saving requisites:', requisites);
+    logger.info('Сохранение реквизитов', requisites);
     try {
       await updateUser(requisites);
       setShowRequisitesModal(false);
       hapticFeedback('success');
-      console.log('📱 ProfilePage: Requisites saved successfully');
+      logger.success('Реквизиты успешно сохранены');
     } catch (error) {
-      console.error('📱 ProfilePage: Error saving requisites:', error);
+      logger.error('Ошибка сохранения реквизитов', error);
     }
   };
 
   const handleSupportRequest = () => {
-    console.log('📱 ProfilePage: Support request triggered');
+    logger.info('Запрос поддержки');
     sendCallback('support_request');
     hapticFeedback('light');
   };
 
   const handleTerminateContract = () => {
-    console.log('📱 ProfilePage: Terminate contract triggered');
+    logger.info('Расторжение договора');
     sendCallback('fired_request');
     setShowTerminateConfirm(false);
     hapticFeedback('light');
