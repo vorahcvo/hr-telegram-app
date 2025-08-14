@@ -1,6 +1,7 @@
 import React from 'react';
 import { TabType } from '../../types';
-import { FileText, Link, BookOpen, User } from 'lucide-react';
+import { Home, Users, Book, Link } from 'lucide-react';
+import { useTelegram } from '../../hooks/useTelegram';
 
 interface TabBarProps {
   activeTab: TabType;
@@ -8,32 +9,37 @@ interface TabBarProps {
 }
 
 const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
+  const { hapticFeedback } = useTelegram();
+
   const tabs = [
-    { id: 'applications' as TabType, label: 'Заявки', icon: FileText },
+    { id: 'applications' as TabType, label: 'Заявки', icon: Home },
     { id: 'sources' as TabType, label: 'Источники', icon: Link },
-    { id: 'training' as TabType, label: 'Обучение', icon: BookOpen },
-    { id: 'profile' as TabType, label: 'Профиль', icon: User },
+    { id: 'training' as TabType, label: 'Обучение', icon: Book },
+    { id: 'profile' as TabType, label: 'Профиль', icon: Users },
   ];
 
+  const handleTabClick = (tab: TabType) => {
+    hapticFeedback('light');
+    onTabChange(tab);
+  };
+
   return (
-    <nav className="bg-[#1c1c1e] border-t border-[#2c2c2e] px-2 py-2">
+    <nav className="bg-[#1c1c1e] border-t border-[#3c3c3e] px-2 py-1">
       <div className="flex justify-around">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          
+        {tabs.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
           return (
             <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center justify-center w-full py-2 px-1 rounded-lg transition-colors ${
+              key={id}
+              onClick={() => handleTabClick(id)}
+              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-[#007aff] text-white'
-                  : 'text-[#8e8e93] hover:text-white'
+                  ? 'text-[#007aff] bg-[#007aff] bg-opacity-10'
+                  : 'text-[#8e8e93] hover:text-white hover:bg-[#2c2c2e]'
               }`}
             >
               <Icon size={20} />
-              <span className="text-xs mt-1">{tab.label}</span>
+              <span className="text-xs mt-1">{label}</span>
             </button>
           );
         })}
