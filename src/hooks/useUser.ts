@@ -39,6 +39,12 @@ export const useUser = () => {
       return;
     }
 
+    // Сбрасываем состояние инициализации если пользователь не создан
+    if (initializationRef.current && !user) {
+      logger.warning('⚠️ Инициализация выполнена, но пользователь не создан, сбрасываем состояние');
+      initializationRef.current = false;
+    }
+
     if (initializationRef.current) {
       logger.warning('⚠️ Инициализация уже выполнена, пропускаем');
       return;
@@ -47,7 +53,7 @@ export const useUser = () => {
     logger.info('🚀 Начинаем инициализацию пользователя');
     initializationRef.current = true;
     initializeUser();
-  }, [tgUser]); // Только tgUser как зависимость
+  }, [tgUser, user]); // Добавляем user как зависимость
 
   const initializeUser = async () => {
     if (!tgUser) {
